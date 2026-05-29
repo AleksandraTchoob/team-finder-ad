@@ -21,6 +21,8 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "users",
+    "projects",
 ]
 
 MIDDLEWARE = [
@@ -71,6 +73,8 @@ DATABASES = {
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
 
+AUTH_USER_MODEL = "users.User"
+
 AUTH_PASSWORD_VALIDATORS = []
 if not DEBUG:
     AUTH_PASSWORD_VALIDATORS.extend(
@@ -107,10 +111,18 @@ USE_TZ = True
 
 STATIC_URL = "static/"
 STATICFILES_DIRS = [BASE_DIR / "static"]
+
 # Media files
 
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
+
+# Redirects after login/logout
+
+LOGIN_URL = "/users/login/"
+LOGIN_REDIRECT_URL = "/projects/list/"
+LOGOUT_REDIRECT_URL = "/projects/list/"
+
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
