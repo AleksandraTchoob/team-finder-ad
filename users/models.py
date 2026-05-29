@@ -7,7 +7,6 @@ from django.utils.translation import gettext_lazy as _
 from .managers import UserManager
 from .utils import generate_avatar_image
 
-
 NAMES_MAX_LENGTH = 124
 PHONE_MAX_LENGTH = 12
 ABOUT_MAX_LENGTH = 256

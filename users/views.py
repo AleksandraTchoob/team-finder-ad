@@ -8,7 +8,6 @@ from .forms import EditProfileForm, LoginForm, RegistrationForm
 from .models import User
 from .utils import get_paginated_queryset
 
-
 FILTER_OWNERS_OF_FAVORITES = "owners-of-favorite-projects"
 FILTER_OWNERS_OF_PARTICIPATING = "owners-of-participating-projects"
 FILTER_INTERESTED_IN_MY_PROJECTS = "interested-in-my-projects"
@@ -99,7 +98,11 @@ def change_password_view(request):
 
 def participants_list_view(request):
     """Страница со списком всех пользователей."""
-    participants = User.objects.filter(is_active=True).prefetch_related("favorites").order_by("-date_joined")
+    participants = (
+        User.objects.filter(is_active=True)
+        .prefetch_related("favorites")
+        .order_by("-date_joined")
+    )
 
     # Фильтрация (для Варианта 1)
     filter_type = request.GET.get("filter")

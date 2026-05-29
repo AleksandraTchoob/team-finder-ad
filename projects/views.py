@@ -8,7 +8,6 @@ from .forms import ProjectForm
 from .models import Project
 from users.utils import get_paginated_queryset
 
-
 PROJECT_STATUS_OPEN = "open"
 PROJECT_STATUS_CLOSED = "closed"
 
@@ -88,15 +87,20 @@ def complete_project_view(request, pk):
 
     if not project:
         return JsonResponse(
-            {"status": "error", "message": "Проект не найден или у вас нет прав на управление"},
-            status=HTTPStatus.NOT_FOUND
+            {
+                "status": "error",
+                "message": "Проект не найден или у вас нет прав на управление",
+            },
+            status=HTTPStatus.NOT_FOUND,
         )
 
     if request.method == "POST":
         if project.status == PROJECT_STATUS_OPEN:
             project.status = PROJECT_STATUS_CLOSED
             project.save()
-            return JsonResponse({"status": "ok", "project_status": PROJECT_STATUS_CLOSED})
+            return JsonResponse(
+                {"status": "ok", "project_status": PROJECT_STATUS_CLOSED}
+            )
 
     return JsonResponse({"status": "error"}, status=HTTPStatus.BAD_REQUEST)
 
@@ -109,7 +113,7 @@ def toggle_participate_view(request, pk):
     if not project:
         return JsonResponse(
             {"status": "error", "message": "Проект не найден"},
-            status=HTTPStatus.NOT_FOUND
+            status=HTTPStatus.NOT_FOUND,
         )
 
     if request.method == "POST":
@@ -132,7 +136,7 @@ def toggle_favorite_view(request, pk):
     if not project:
         return JsonResponse(
             {"status": "error", "message": "Проект не найден"},
-            status=HTTPStatus.NOT_FOUND
+            status=HTTPStatus.NOT_FOUND,
         )
 
     if request.method == "POST":
