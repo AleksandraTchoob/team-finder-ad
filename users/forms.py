@@ -1,6 +1,9 @@
 import re
+
 from django import forms
+
 from .models import User
+from .utils import validate_phone, validate_github_url
 
 
 class RegistrationForm(forms.ModelForm):
@@ -75,23 +78,11 @@ class EditProfileForm(forms.ModelForm):
     def clean_phone(self):
         phone = self.cleaned_data.get("phone")
         if phone:
-            phone = phone.replace(" ", "").replace("-", "")
-            # Должен сохраняться только номер телефона в одном из двух форматов: либо 8XXXXXXXXXX, либо +7XXXXXXXXXX.
-            if not re.match(r"^(8\d{10}|\+7\d{10})$", phone):
-                raise forms.ValidationError(
-                    "Введите корректный номер телефона: 8XXXXXXXXXX или +7XXXXXXXXXX!"
-                )
-            if phone.startswith("8"):
-                phone = "+7" + phone[1:]
-
-            # Номера телефона должны быть уникальны
-            if User.objects.filter(phone=phone).exclude(pk=self.instance.pk).exists():
-                raise forms.ValidationError("Этот номер телефона уже используется!")
+            return validate_phone(phone, exclude_pk=self.instance.pk)
 
         return phone
 
     def clean_github_url(self):
         url = self.cleaned_data.get("github_url")
-        if url and "github.com" not in url:
-            raise forms.ValidationError("Ссылка должна вести на GitHub!")
-        return url
+
+        return validate_github_url(url)

@@ -3,16 +3,20 @@ from django.conf import settings
 from django.utils.translation import gettext_lazy as _
 
 
+PROJECT_STATUS_CHOICES = [
+    ("open", "Открыт"),
+    ("closed", "Закрыт"),
+]
+
+PROJECT_NAME_MAX_LENGTH = 200
+PROJECT_STATUS_MAX_LENGTH = 6
+
+
 class Project(models.Model):
     """Модель проекта для TeamFinder."""
 
-    STATUS_CHOICES = [
-        ("open", "Открыт"),
-        ("closed", "Закрыт"),
-    ]
-
     # Основная информация
-    name = models.CharField(_("name"), max_length=200)
+    name = models.CharField(_("name"), max_length=PROJECT_NAME_MAX_LENGTH)
     description = models.TextField(_("description"), blank=True)
     owner = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -33,7 +37,7 @@ class Project(models.Model):
 
     # Статусы
     status = models.CharField(
-        _("status"), max_length=6, choices=STATUS_CHOICES, default="open"
+        _("status"), max_length=PROJECT_STATUS_MAX_LENGTH, choices=PROJECT_STATUS_CHOICES, default="open"
     )
 
     class Meta:

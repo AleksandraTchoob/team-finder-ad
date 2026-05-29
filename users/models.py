@@ -1,13 +1,16 @@
-from django.db import models
-from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
-from django.utils.translation import gettext_lazy as _
-from django.core.files.base import ContentFile
-from .managers import UserManager
-
-from PIL import Image, ImageDraw, ImageFont
-import io
-import random
 import os
+
+from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
+from django.db import models
+from django.utils.translation import gettext_lazy as _
+
+from .managers import UserManager
+from .utils import generate_avatar_image
+
+
+NAMES_MAX_LENGTH = 124
+PHONE_MAX_LENGTH = 12
+ABOUT_MAX_LENGTH = 256
 
 
 class User(AbstractBaseUser, PermissionsMixin):
@@ -15,14 +18,14 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     # Обязательные поля
     email = models.EmailField(_("email address"), unique=True)
-    name = models.CharField(_("name"), max_length=124)
-    surname = models.CharField(_("surname"), max_length=124)
-    phone = models.CharField(_("phone"), max_length=12)
+    name = models.CharField(_("name"), max_length=NAMES_MAX_LENGTH)
+    surname = models.CharField(_("surname"), max_length=NAMES_MAX_LENGTH)
+    phone = models.CharField(_("phone"), max_length=PHONE_MAX_LENGTH)
     avatar = models.ImageField(_("avatar"), upload_to="avatars/", blank=True)
 
     # Дополнительные поля
     github_url = models.URLField(_("GitHub URL"), blank=True)
-    about = models.TextField(_("about"), max_length=256, blank=True)
+    about = models.TextField(_("about"), max_length=ABOUT_MAX_LENGTH, blank=True)
 
     # Статусы
     is_active = models.BooleanField(default=True)
@@ -54,45 +57,7 @@ class User(AbstractBaseUser, PermissionsMixin):
         """Переопределяем save() для авто-генерации аватарки."""
         # Генерируем аватарку, если поле пустое и есть имя
         if not self.avatar and self.name:
-            self._generate_avatar()
+            filename, content = generate_avatar_image(self.name, self.email)
+            if filename and content:
+                self.avatar.save(filename, content, save=False)
         super().save(*args, **kwargs)
-
-    def _generate_avatar(self):
-        """Генерирует аватарку с первой буквой имени пользователя на однотонном фоне."""
-        colors = [
-            (236, 64, 122),  # Pink
-            (33, 150, 243),  # Blue
-            (76, 175, 80),  # Green
-            (255, 152, 0),  # Orange
-            (156, 39, 176),  # Purple
-            (0, 150, 136),  # Teal
-            (109, 76, 65),  # Brown
-            (96, 125, 139),  # Blue Grey
-        ]
-        bg_color = random.choice(colors)
-        text_color = (255, 255, 255)
-
-        image = Image.new("RGB", (200, 200), bg_color)
-        draw = ImageDraw.Draw(image)
-
-        first_letter = self.name[0].upper() if self.name else "U"
-        try:
-            # Пробуем найти системный шрифт
-            font = ImageFont.truetype("arial.ttf", 100)
-        except IOError:
-            font = ImageFont.load_default()
-        bbox = draw.textbbox((0, 0), first_letter, font=font)
-        text_width = bbox[2] - bbox[0]
-        text_height = bbox[3] - bbox[1]
-        x = (200 - text_width) // 2 - bbox[0]
-        y = (200 - text_height) // 2 - bbox[1]
-
-        draw.text((x, y), first_letter, fill=text_color, font=font)
-
-        # Сохраняем в буфер
-        buffer = io.BytesIO()
-        image.save(buffer, format="PNG")
-        buffer.seek(0)
-
-        filename = f"avatar_{self.email.split('@')[0]}.png"
-        self.avatar.save(filename, ContentFile(buffer.getvalue()), save=False)
